@@ -45,7 +45,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: yourdockerusername/new-api
+          images: happyfools/new-api-arm64
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
