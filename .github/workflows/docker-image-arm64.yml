@@ -22,12 +22,13 @@ jobs:
         with:
           repository: Calcium-Ion/new-api
           token: ${{ secrets.GITHUB_TOKEN }}
-          fetch-depth: 0 
+          fetch-depth: 0
 
       - name: Save version info
         run: |
           git fetch --tags
-          echo "VERSION=$(git describe --tags --always)" > $GITHUB_ENV
+          VERSION=$(git describe --tags --abbrev=0)
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -46,6 +47,9 @@ jobs:
         uses: docker/metadata-action@v4
         with:
           images: happyfools/new-api-arm64
+          tags: |
+            ${VERSION}
+            latest
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
