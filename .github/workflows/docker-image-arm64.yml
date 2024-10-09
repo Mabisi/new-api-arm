@@ -17,12 +17,17 @@ jobs:
       packages: write
       contents: read
     steps:
-      - name: Check out the repo
+      - name: Clone External Repo
         uses: actions/checkout@v3
+        with:
+          repository: Calcium-Ion/new-api
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0 
 
       - name: Save version info
         run: |
-          git describe --tags > VERSION 
+          git fetch --tags
+          echo "VERSION=$(git describe --tags --always)" > $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -40,7 +45,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v4
         with:
-          images: calciumion/new-api
+          images: yourdockerusername/new-api
 
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
