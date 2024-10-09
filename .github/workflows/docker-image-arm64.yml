@@ -48,7 +48,7 @@ jobs:
           images: happyfools/new-api
           tags: |
             type=ref,event=branch,latest=true
-            type=semver,pattern={{version}} # 提取最新的版本标签
+            type=semver,pattern={{version}}
           
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
@@ -57,6 +57,6 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ steps.meta.outputs.tags }} # 最新标签
-            happyfools/new-api:latest # latest 标签
+            ${{ steps.meta.outputs.tags }}
+            happyfools/new-api:latest
           labels: ${{ steps.meta.outputs.labels }}
