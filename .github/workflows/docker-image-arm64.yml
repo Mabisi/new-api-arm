@@ -1,26 +1,33 @@
-name: Build and Push Docker Image
+name: Publish Docker image (arm64)
 
 on:
   push:
-    branches:
-      - main
-
+    tags:
+      - '*'
+  workflow_dispatch:
+    inputs:
+      name:
+        description: 'reason'
+        required: false
 jobs:
-  build-and-push:
+  push_to_docker_hub:
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
     steps:
-      - name: Checkout code
+      - name: Clone External Repo
         uses: actions/checkout@v3
         with:
+          repository: Calcium-Ion/new-api
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Save version info
-        id: version
         run: |
           git fetch --tags
-          VERSION=$(git describe --tags --always)
-          echo "::set-output name=version::$VERSION"
-
+          echo "VERSION=$(git describe --tags --always)" > $GITHUB_ENV
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -34,6 +41,15 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: happyfools/new-api
+          tags: |
+            type=ref,event=branch,latest=true
+            type=semver,pattern={{version}} # 提取最新的版本标签
+          
       - name: Build and push Docker images
         uses: docker/build-push-action@v3
         with:
@@ -41,7 +57,6 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            happyfools/new-api-arm64:latest
-            happyfools/new-api-arm64:${{ steps.version.outputs.version }}
-          labels: |
-            version=${{ steps.version.outputs.version }}
+            ${{ steps.meta.outputs.tags }} # 最新标签
+            happyfools/new-api:latest # latest 标签
+          labels: ${{ steps.meta.outputs.labels }}
