@@ -9,6 +9,9 @@ on:
       name:
         description: 'reason'
         required: false
+  schedule:
+    - cron: 0 0 * * *
+
 jobs:
   push_to_docker_hub:
     name: Push Docker image to Docker Hub
@@ -16,6 +19,7 @@ jobs:
     permissions:
       packages: write
       contents: read
+
     steps:
       - name: Clone External Repo
         uses: actions/checkout@v3
@@ -41,22 +45,23 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v4
-        with:
-          images: happyfools/new-api
-          tags: |
-            type=ref,event=branch,latest=true
-            type=semver,pattern={{version}}
-          
-      - name: Build and push Docker images
+      - name: install jq
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y jq
+
+      - name: Get the latest tag.
+        id: get-latest-tag
+        run: |
+          LATEST_TAG=$(curl -s https://api.github.com/repos/Calcium-Ion/new-api/tags | jq -r '.[0].name')
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+
+      - name: Publish and build Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
           platforms: linux/arm64
           push: true
           tags: |
-            ${{ steps.meta.outputs.tags }}
             happyfools/new-api:latest
-          labels: ${{ steps.meta.outputs.labels }}
+            happyfools/new-api:${{ env.LATEST_TAG }}
