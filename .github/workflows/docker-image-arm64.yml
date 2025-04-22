@@ -53,7 +53,7 @@ jobs:
       - name: Get the latest tag.
         id: get-latest-tag
         run: |
-          LATEST_TAG=$(curl -s https://api.github.com/repos/Calcium-Ion/new-api/tags | jq -r '.[0].name')
+          LATEST_TAG=$(curl -s -L "https://api.github.com/repos/Calcium-Ion/new-api/tags" | jq -r '.[0].name // empty')
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
 
       - name: Publish and build Docker image
